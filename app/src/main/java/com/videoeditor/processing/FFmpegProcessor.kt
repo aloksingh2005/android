@@ -1,10 +1,8 @@
 package com.videoeditor.processing
 
 import android.content.Context
-import com.arthenica.ffmpegkit.FFmpegKit
-import com.arthenica.ffmpegkit.FFmpegKitConfig
-import com.arthenica.ffmpegkit.ReturnCode
-import com.arthenica.ffmpegkit.Statistics
+import com.arthenica.mobileffmpeg.Config
+import com.arthenica.mobileffmpeg.FFmpeg
 import com.videoeditor.data.models.AspectRatio
 import com.videoeditor.utils.FileManager
 import kotlinx.coroutines.Dispatchers
@@ -47,22 +45,9 @@ class FFmpegProcessor(private val context: Context) {
             onProgress(0, "Starting processing...")
             
             // Execute FFmpeg command
-            val session = FFmpegKit.execute(command)
+            val returnCode = FFmpeg.execute(command)
             
-            // Monitor progress
-            FFmpegKitConfig.enableStatisticsCallback { statistics ->
-                val progress = calculateProgress(statistics, options)
-                val message = when {
-                    progress < 30 -> "Trimming video..."
-                    progress < 70 -> "Converting aspect ratio..."
-                    else -> "Encoding video..."
-                }
-                onProgress(progress, message)
-            }
-            
-            val returnCode = session.returnCode
-            
-            if (ReturnCode.isSuccess(returnCode)) {
+            if (returnCode == 0) {
                 if (outputFile.exists()) {
                     onProgress(100, "Processing complete!")
                     Result.success(outputFile.absolutePath)
@@ -70,8 +55,8 @@ class FFmpegProcessor(private val context: Context) {
                     Result.failure(Exception("Output file not created"))
                 }
             } else {
-                val output = session.failStackTrace ?: "Unknown error"
-                Result.failure(Exception("FFmpeg error: $output"))
+                val output = Config.getLastCommandOutput()
+                Result.failure(Exception("FFmpeg error: Return code $returnCode. $output"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -128,18 +113,7 @@ class FFmpegProcessor(private val context: Context) {
         return String.format("%02d:%02d:%02d.%03d", hours, minutes, seconds, millis)
     }
     
-    /**
-     * Calculate processing progress from FFmpeg statistics
-     */
-    private fun calculateProgress(statistics: Statistics, options: ProcessingOptions): Int {
-        val time = statistics.time // in milliseconds
-        val duration = options.endTimeMs - options.startTimeMs
-        return if (duration > 0) {
-            ((time.toFloat() / duration) * 100).toInt().coerceIn(0, 100)
-        } else {
-            0
-        }
-    }
+
     
     /**
      * Extract video thumbnail at specific time
@@ -153,9 +127,9 @@ class FFmpegProcessor(private val context: Context) {
             val time = formatTime(timeMs)
             val command = "-i \"$videoPath\" -ss $time -vframes 1 -y \"$outputPath\""
             
-            val session = FFmpegKit.execute(command)
+            val returnCode = FFmpeg.execute(command)
             
-            if (ReturnCode.isSuccess(session.returnCode)) {
+            if (returnCode == 0) {
                 Result.success(outputPath)
             } else {
                 Result.failure(Exception("Thumbnail extraction failed"))
@@ -171,10 +145,10 @@ class FFmpegProcessor(private val context: Context) {
     suspend fun getVideoDuration(videoPath: String): Long = withContext(Dispatchers.IO) {
         try {
             val command = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"$videoPath\""
-            val session = FFmpegKit.execute(command)
+            val returnCode = FFmpeg.execute(command)
             
-            if (ReturnCode.isSuccess(session.returnCode)) {
-                val output = session.output ?: "0"
+            if (returnCode == 0) {
+                val output = Config.getLastCommandOutput() ?: "0"
                 (output.trim().toDoubleOrNull() ?: 0.0).toLong() * 1000
             } else {
                 0L

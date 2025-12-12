@@ -91,8 +91,9 @@ dependencies {
     // WorkManager for scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // FFmpeg Kit for video processing - RE-ENABLED FOR LOCAL BUILD
-    implementation("com.arthenica:ffmpeg-kit-min:6.0-2")
+    // Mobile-FFmpeg for video processing (FFmpeg Kit was retired Jan 2025)
+    // Using the 'min' package which includes basic video processing
+    implementation("com.arthenica:mobile-ffmpeg-min:4.4.LTS")
 
     // ExoPlayer for video playback
     implementation("androidx.media3:media3-exoplayer:1.2.0")
