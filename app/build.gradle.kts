@@ -91,7 +91,7 @@ dependencies {
     // WorkManager for scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // FFmpeg Kit for video processing (using min version for smaller size)
+    // FFmpeg Kit for video processing - RE-ENABLED FOR LOCAL BUILD
     implementation("com.arthenica:ffmpeg-kit-min:6.0-2")
 
     // ExoPlayer for video playback
@@ -99,9 +99,9 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.2.0")
     implementation("androidx.media3:media3-common:1.2.0")
 
-    // YouTube Extractor (commented out for initial build - can be added later)
-    // implementation("com.github.yausername.youtubedl-android:library:0.14.+")
-    // implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.+")
+    // YouTube Extractor - RE-ENABLED FOR LOCAL BUILD
+    implementation("com.github.yausername.youtubedl-android:library:0.14.+")
+    implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.+")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
