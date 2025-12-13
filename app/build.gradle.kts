@@ -44,6 +44,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        prefab = true  // Required for FFmpeg native dependencies
     }
 
     composeOptions {
@@ -92,9 +93,9 @@ dependencies {
     // WorkManager for scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // Mobile-FFmpeg for video processing
-    // NOTE: Not available on Maven Central - use local AAR or JitPack
-    implementation("com.arthenica:mobile-ffmpeg-min:4.4")
+    // FFmpeg for video processing (actively maintained as of June 2025)
+    // Using yearsyan/ffmpeg-android-build published on Maven Central
+    implementation("io.github.yearsyan:ffmpeg-android-build:1.1.0")
 
     // ExoPlayer for video playback
     implementation("androidx.media3:media3-exoplayer:1.2.0")
