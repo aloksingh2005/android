@@ -92,9 +92,12 @@ dependencies {
     // WorkManager for scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // Mobile-FFmpeg for video processing (FFmpeg Kit was retired Jan 2025)
-    // Using the 'min' package which includes basic video processing
-    implementation("com.arthenica:mobile-ffmpeg-min:4.4")
+    // TODO: FFmpeg removed from Maven Central (retired 2025)
+    // Migrate to Media3 Transformer for video processing:
+    // implementation("androidx.media3:media3-transformer:1.2.0")
+    // implementation("androidx.media3:media3-effect:1.2.0")
+    // TEMP: Commenting out until migration complete
+    // implementation("com.arthenica:mobile-ffmpeg-min:4.4")
 
     // ExoPlayer for video playback
     implementation("androidx.media3:media3-exoplayer:1.2.0")
