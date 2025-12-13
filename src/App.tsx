@@ -1,15 +1,86 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
+import { Timeline } from './components/Timeline'
+import { AspectRatioSelector } from './components/AspectRatioSelector'
+import { FilterGallery } from './components/FilterGallery'
+import { TextOverlay } from './components/TextOverlay'
+import { ExportModal, type ExportSettings } from './components/ExportModal'
+import { useVideoEditor } from './hooks/useVideoEditor'
+import { getVideoProcessor } from './lib/VideoProcessor'
+import { combineFilters } from './lib/filters'
 
 function App() {
-  const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [videoUrl, setVideoUrl] = useState<string>('')
+  const editor = useVideoEditor()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState(0)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && file.type.startsWith('video/')) {
-      setVideoFile(file)
-      setVideoUrl(URL.createObjectURL(file))
+      editor.loadVideo(file)
+    }
+  }
+
+  const handleVideoLoaded = () => {
+    if (videoRef.current) {
+      editor.handleVideoMetadataLoaded(videoRef.current)
+    }
+  }
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      editor.handleSeek(videoRef.current.currentTime)
+    }
+  }
+
+  const handleExport = async (settings: ExportSettings) => {
+    if (!editor.videoFile) return
+
+    setIsExporting(true)
+    setExportProgress(0)
+
+    try {
+      const processor = getVideoProcessor()
+
+      // Combine filters
+      const filterString = combineFilters(editor.selectedFilter, editor.adjustment)
+
+      // Process video
+      const outputBlob = await processor.processVideo(
+        editor.videoFile,
+        {
+          startTime: editor.startTime,
+          endTime: editor.endTime,
+          aspectRatio: {
+            width: editor.selectedAspectRatio.width,
+            height: editor.selectedAspectRatio.height,
+          },
+          filterString: filterString || undefined,
+          quality: settings.quality,
+          format: settings.format,
+          fps: settings.fps,
+        },
+        (progress) => {
+          setExportProgress(progress)
+        }
+      )
+
+      // Download the file
+      const url = URL.createObjectURL(outputBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `instagram-video-${Date.now()}.${settings.format}`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      setIsExporting(false)
+      setIsExportModalOpen(false)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Export failed. Please try again.')
+      setIsExporting(false)
     }
   }
 
@@ -23,7 +94,7 @@ function App() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {!videoFile ? (
+        {!editor.videoFile ? (
           <div className="max-w-2xl mx-auto">
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border-2 border-dashed border-white/20 p-12 text-center hover:border-purple-500/50 transition-all">
               <div className="text-6xl mb-6">📹</div>
@@ -46,61 +117,115 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
+            {/* Video Preview */}
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
               <video
-                src={videoUrl}
+                ref={videoRef}
+                src={editor.videoUrl}
                 controls
+                onLoadedMetadata={handleVideoLoaded}
+                onTimeUpdate={handleTimeUpdate}
                 className="w-full rounded-xl bg-black"
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-                <h3 className="text-lg font-semibold mb-4">✂️ Trim Video</h3>
-                <p className="text-slate-400 text-sm">Coming soon...</p>
-              </div>
-
-              <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-white/10 p-6">
-                <h3 className="text-lg font-semibold mb-4">📐 Aspect Ratio</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="px-4 py-3 bg-purple-500/10 border-2 border-purple-500 rounded-xl">
-                    <div className="font-bold">9:16</div>
-                    <div className="text-xs text-slate-400">Story/Reels</div>
-                  </button>
-                  <button className="px-4 py-3 bg-slate-900/50 border-2 border-white/10 rounded-xl hover:border-purple-500/50">
-                    <div className="font-bold">1:1</div>
-                    <div className="text-xs text-slate-400">Feed Post</div>
-                  </button>
-                  <button className="px-4 py-3 bg-slate-900/50 border-2 border-white/10 rounded-xl hover:border-purple-500/50">
-                    <div className="font-bold">4:5</div>
-                    <div className="text-xs text-slate-400">Portrait</div>
-                  </button>
-                  <button className="px-4 py-3 bg-slate-900/50 border-2 border-white/10 rounded-xl hover:border-purple-500/50">
-                    <div className="font-bold">16:9</div>
-                    <div className="text-xs text-slate-400">YouTube</div>
-                  </button>
-                </div>
-              </div>
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 overflow-x-auto">
+              {([
+                { id: 'trim', label: '✂️ Trim', name: 'trim' },
+                { id: 'aspect', label: '📐 Aspect Ratio', name: 'aspect' },
+                { id: 'filters', label: '🎨 Filters', name: 'filters' },
+                { id: 'text', label: '📝 Text', name: 'text' },
+              ] as const).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => editor.setActiveTab(tab.name)}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${editor.activeTab === tab.name
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30'
+                      : 'bg-slate-800/50 border border-white/10 hover:border-purple-500/50'
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            <div className="mt-6 flex gap-4">
+            {/* Tab Content */}
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-white/10 p-6 mb-6">
+              {editor.activeTab === 'trim' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span>✂️</span>
+                    Trim Video
+                  </h3>
+                  <Timeline
+                    duration={editor.duration}
+                    currentTime={editor.currentTime}
+                    startTime={editor.startTime}
+                    endTime={editor.endTime}
+                    onSeek={editor.handleSeek}
+                    onTrimChange={editor.handleTrimChange}
+                  />
+                  <div className="text-sm text-slate-400">
+                    Selected duration: {Math.round(editor.endTime - editor.startTime)}s
+                  </div>
+                </div>
+              )}
+
+              {editor.activeTab === 'aspect' && (
+                <AspectRatioSelector
+                  selectedRatio={editor.selectedAspectRatio}
+                  onSelect={editor.setSelectedAspectRatio}
+                />
+              )}
+
+              {editor.activeTab === 'filters' && (
+                <FilterGallery
+                  selectedFilter={editor.selectedFilter}
+                  adjustment={editor.adjustment}
+                  onFilterSelect={editor.setSelectedFilter}
+                  onAdjustmentChange={editor.setAdjustment}
+                />
+              )}
+
+              {editor.activeTab === 'text' && (
+                <TextOverlay
+                  overlays={editor.textOverlays}
+                  onAddOverlay={editor.addTextOverlay}
+                  onRemoveOverlay={editor.removeTextOverlay}
+                />
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
               <button
-                onClick={() => {
-                  setVideoFile(null)
-                  setVideoUrl('')
-                }}
+                onClick={editor.reset}
                 className="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:bg-slate-700/50"
               >
                 ← Start Over
               </button>
-              <button className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50">
-                ⬇️ Export Video (Coming Soon)
+              <button
+                onClick={() => setIsExportModalOpen(true)}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/50"
+              >
+                ⬇️ Export Video
               </button>
             </div>
           </div>
         )}
       </main>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExport}
+        isExporting={isExporting}
+        progress={exportProgress}
+        duration={editor.endTime - editor.startTime}
+      />
     </div>
   )
 }

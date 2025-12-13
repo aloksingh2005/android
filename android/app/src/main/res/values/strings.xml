@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Instagram Video Editor</string>
+    <string name="title_activity_main">Instagram Video Editor</string>
+    <string name="package_name">com.videoeditor.instagram</string>
+    <string name="custom_url_scheme">com.videoeditor.instagram</string>
+</resources>
