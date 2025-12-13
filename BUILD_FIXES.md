@@ -6,7 +6,7 @@
 **FFmpeg Kit was officially retired on January 6, 2025!** All binaries are being removed from Maven Central.
 
 ### ✅ Solution Applied:
-Migrated from `ffmpeg-kit-min` to `mobile-ffmpeg-min:4.4.LTS`
+Migrated from `ffmpeg-kit-min` to `mobile-ffmpeg-min:4.4`
 
 ---
 
@@ -14,7 +14,7 @@ Migrated from `ffmpeg-kit-min` to `mobile-ffmpeg-min:4.4.LTS`
 
 ### 1. FFmpeg Library - UPDATED! 🆕
 - **Old**: `com.arthenica:ffmpeg-kit-min:6.0-2` ❌ (No longer available)
-- **New**: `com.arthenica:mobile-ffmpeg-min:4.4.LTS` ✅ (Still on Maven Central)
+- **New**: `com.arthenica:mobile-ffmpeg-min:4.4` ✅ (Still on Maven Central)
 - **Why**: FFmpeg Kit was retired, Mobile-FFmpeg is still accessible
 - **Impact**: All video processing will still work!
 - **Code Updated**: 
@@ -35,7 +35,7 @@ Migrated from `ffmpeg-kit-min` to `mobile-ffmpeg-min:4.4.LTS`
 ```bash
 cd "c:\Users\Alok Kumar\Desktop\android"
 git add .
-git commit -m "Fix: Migrate from FFmpeg Kit to Mobile-FFmpeg 4.4.LTS"
+git commit -m "Fix: Migrate from FFmpeg Kit to Mobile-FFmpeg 4.4"
 git push
 ```
 
