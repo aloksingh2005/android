@@ -66,7 +66,7 @@ class YouTubeDownloader(private val context: Context) {
             request.addOption("-o", outputFile.absolutePath)
             
             // Execute download with progress callback
-            YoutubeDL.getInstance().execute(request) { progress, etaInSeconds ->
+            YoutubeDL.getInstance().execute(request) { progress, etaInSeconds, line ->
                 onProgress(
                     DownloadProgress(
                         progress = progress,
