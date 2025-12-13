@@ -94,8 +94,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // FFmpeg for video processing (actively maintained as of June 2025)
-    // Using yearsyan/ffmpeg-android-build published on Maven Central
-    implementation("io.github.yearsyan:ffmpeg-android-build:1.1.0")
+    // Using yearsyan/ffmpeg-android-build (mini variant) published on Maven Central
+    implementation("io.github.yearsyan:ffmpeg-mini:7.1-beta.13")
 
     // ExoPlayer for video playback
     implementation("androidx.media3:media3-exoplayer:1.2.0")
