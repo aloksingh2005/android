@@ -25,9 +25,15 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: 8.2
+        cache-disabled: true
+        
+    - name: Clean Gradle cache
+      run: |
+        rm -rf ~/.gradle/caches/
+        rm -rf .gradle/
         
     - name: Build Debug APK
-      run: gradle assembleDebug --no-daemon
+      run: gradle assembleDebug --no-daemon --refresh-dependencies
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
