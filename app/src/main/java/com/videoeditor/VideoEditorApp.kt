@@ -14,9 +14,12 @@ class VideoEditorApp : Application(), Configuration.Provider {
         
         // Initialize YouTube Downloader
         try {
-            YoutubeDL.getInstance().init(this)
+            android.util.Log.d("VideoEditorApp", "Initializing YouTubeDL...")
+            YoutubeDL.getInstance().init(this, YoutubeDL.UpdateChannel.STABLE)
+            android.util.Log.d("VideoEditorApp", "YouTubeDL initialized successfully")
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("VideoEditor App", "YouTubeDL initialization failed", e)
+            // App can still function without YouTube download feature
         }
         
         // Create notification channel for schedules

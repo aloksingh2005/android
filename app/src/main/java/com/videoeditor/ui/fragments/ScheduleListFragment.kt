@@ -23,7 +23,19 @@ class ScheduleListFragment : Fragment() {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO: Implement schedule list
+        
+        // Show empty state (no schedules yet)
+        binding.layoutEmptyState.visibility = android.view.View.VISIBLE
+        binding.rvSchedules.visibility = android.view.View.GONE
+        
+        // FAB click to add schedule
+        binding.fabAddSchedule.setOnClickListener {
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Schedule feature coming soon!",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
     }
     
     override fun onDestroyView() {
