@@ -1,13 +1,13 @@
 package com.videoeditor.processing
 
 import android.content.Context
-import com.arthenica.mobileffmpeg.Config
-import com.arthenica.mobileffmpeg.FFmpeg
 import com.videoeditor.data.models.AspectRatio
 import com.videoeditor.utils.FileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 
 class FFmpegProcessor(private val context: Context) {
     
@@ -27,7 +27,7 @@ class FFmpegProcessor(private val context: Context) {
     }
     
     /**
-     * Process video withтай trimming and aspect ratio conversion
+     * Process video with trimming and aspect ratio conversion
      */
     suspend fun processVideo(
         options: ProcessingOptions,
@@ -45,9 +45,9 @@ class FFmpegProcessor(private val context: Context) {
             onProgress(0, "Starting processing...")
             
             // Execute FFmpeg command
-            val returnCode = FFmpeg.execute(command)
+            val exitCode = executeFFmpeg(command)
             
-            if (returnCode == 0) {
+            if (exitCode == 0) {
                 if (outputFile.exists()) {
                     onProgress(100, "Processing complete!")
                     Result.success(outputFile.absolutePath)
@@ -55,8 +55,7 @@ class FFmpegProcessor(private val context: Context) {
                     Result.failure(Exception("Output file not created"))
                 }
             } else {
-                val output = Config.getLastCommandOutput()
-                Result.failure(Exception("FFmpeg error: Return code $returnCode. $output"))
+                Result.failure(Exception("FFmpeg error: Exit code $exitCode"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -66,7 +65,7 @@ class FFmpegProcessor(private val context: Context) {
     /**
      * Build FFmpeg command for video processing
      */
-    private fun buildFFmpegCommand(options: ProcessingOptions, outputPath: String): String {
+    private fun buildFFmpegCommand(options: ProcessingOptions, outputPath: String): Array<String> {
         val startTime = formatTime(options.startTimeMs)
         val duration = formatTime(options.endTimeMs - options.startTimeMs)
         
@@ -85,20 +84,21 @@ class FFmpegProcessor(private val context: Context) {
             }
         }
         
-        return buildString {
-            append("-i \"${options.inputPath}\" ")
-            append("-ss $startTime ")
-            append("-t $duration ")
-            append("-vf \"$videoFilter\" ")
-            append("-c:v libx264 ")
-            append("-preset medium ")
-            append("-crf 23 ")
-            append("-c:a aac ")
-            append("-b:a 128k ")
-            append("-movflags +faststart ")
-            append("-y ")
-            append("\"$outputPath\"")
-        }
+        return arrayOf(
+            "ffmpeg",
+            "-i", options.inputPath,
+            "-ss", startTime,
+            "-t", duration,
+            "-vf", videoFilter,
+            "-c:v", "libx264",
+            "-preset", "medium",
+            "-crf", "23",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "-movflags", "+faststart",
+            "-y",
+            outputPath
+        )
     }
     
     /**
@@ -113,8 +113,6 @@ class FFmpegProcessor(private val context: Context) {
         return String.format("%02d:%02d:%02d.%03d", hours, minutes, seconds, millis)
     }
     
-
-    
     /**
      * Extract video thumbnail at specific time
      */
@@ -125,11 +123,18 @@ class FFmpegProcessor(private val context: Context) {
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val time = formatTime(timeMs)
-            val command = "-i \"$videoPath\" -ss $time -vframes 1 -y \"$outputPath\""
+            val command = arrayOf(
+                "ffmpeg",
+                "-i", videoPath,
+                "-ss", time,
+                "-vframes", "1",
+                "-y",
+                outputPath
+            )
             
-            val returnCode = FFmpeg.execute(command)
+            val exitCode = executeFFmpeg(command)
             
-            if (returnCode == 0) {
+            if (exitCode == 0) {
                 Result.success(outputPath)
             } else {
                 Result.failure(Exception("Thumbnail extraction failed"))
@@ -137,23 +142,41 @@ class FFmpegProcessor(private val context: Context) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
     
     /**
      * Get video duration using FFprobe
      */
     suspend fun getVideoDuration(videoPath: String): Long = withContext(Dispatchers.IO) {
         try {
-            val command = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"$videoPath\""
-            val returnCode = FFmpeg.execute(command)
+            val command = arrayOf(
+                "ffprobe",
+                "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                videoPath
+            )
             
-            if (returnCode == 0) {
-                val output = Config.getLastCommandOutput() ?: "0"
-                (output.trim().toDoubleOrNull() ?: 0.0).toLong() * 1000
-            } else {
-                0L
-            }
+            val process = Runtime.getRuntime().exec(command)
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val output = reader.readLine() ?: "0"
+            process.waitFor()
+            
+            (output.trim().toDoubleOrNull() ?: 0.0).toLong() * 1000
         } catch (e: Exception) {
             0L
+        }
+    }
+    
+    /**
+     * Execute FFmpeg command and return exit code
+     */
+    private fun executeFFmpeg(command: Array<String>): Int {
+        return try {
+            val process = Runtime.getRuntime().exec(command)
+            process.waitFor()
+        } catch (e: Exception) {
+            -1
         }
     }
 }
