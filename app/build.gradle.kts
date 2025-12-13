@@ -92,23 +92,19 @@ dependencies {
     // WorkManager for scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // TODO: FFmpeg removed from Maven Central (retired 2025)
-    // Migrate to Media3 Transformer for video processing:
-    // implementation("androidx.media3:media3-transformer:1.2.0")
-    // implementation("androidx.media3:media3-effect:1.2.0")
-    // TEMP: Commenting out until migration complete
-    // implementation("com.arthenica:mobile-ffmpeg-min:4.4")
+    // Mobile-FFmpeg for video processing
+    // NOTE: Not available on Maven Central - use local AAR or JitPack
+    implementation("com.arthenica:mobile-ffmpeg-min:4.4")
 
     // ExoPlayer for video playback
     implementation("androidx.media3:media3-exoplayer:1.2.0")
     implementation("androidx.media3:media3-ui:1.2.0")
     implementation("androidx.media3:media3-common:1.2.0")
 
-    // TODO: YouTube-DL also removed from Jitpack (2025)
-    // Need alternative for YouTube downloads
-    // TEMP: Commented out until replacement found
-    // implementation("com.github.yausername.youtubedl-android:library:0.14.+")
-    // implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.+")
+    // YouTube Downloader
+    // NOTE: Not available on JitPack - use local AAR
+    implementation("com.github.yausername.youtubedl-android:library:0.14.+")
+    implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.+")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

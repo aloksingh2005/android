@@ -1,9 +1,8 @@
 package com.videoeditor.processing
 
 import android.content.Context
-// TODO: Mobile-FFmpeg library removed (2025)
-// import com.arthenica.mobileffmpeg.Config
-// import com.arthenica.mobileffmpeg.FFmpeg
+import com.arthenica.mobileffmpeg.Config
+import com.arthenica.mobileffmpeg.FFmpeg
 import com.videoeditor.data.models.AspectRatio
 import com.videoeditor.utils.FileManager
 import kotlinx.coroutines.Dispatchers
@@ -45,12 +44,6 @@ class FFmpegProcessor(private val context: Context) {
             
             onProgress(0, "Starting processing...")
             
-            // TODO: FFmpeg library removed - return error
-            return@withContext Result.failure(
-                UnsupportedOperationException("Video processing temporarily unavailable. FFmpeg library removed.")
-            )
-            
-            /*
             // Execute FFmpeg command
             val returnCode = FFmpeg.execute(command)
             
@@ -65,7 +58,6 @@ class FFmpegProcessor(private val context: Context) {
                 val output = Config.getLastCommandOutput()
                 Result.failure(Exception("FFmpeg error: Return code $returnCode. $output"))
             }
-            */
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -132,11 +124,6 @@ class FFmpegProcessor(private val context: Context) {
         outputPath: String
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            // TODO: FFmpeg library removed - return error
-            return@withContext Result.failure(
-                UnsupportedOperationException("Thumbnail extraction unavailable. FFmpeg library removed.")
-            )
-            /* DISABLED
             val time = formatTime(timeMs)
             val command = "-i \"$videoPath\" -ss $time -vframes 1 -y \"$outputPath\""
             
@@ -147,24 +134,21 @@ class FFmpegProcessor(private val context: Context) {
             } else {
                 Result.failure(Exception("Thumbnail extraction failed"))
             }
-            */
-    }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     
     /**
      * Get video duration using FFprobe
      */
     suspend fun getVideoDuration(videoPath: String): Long = withContext(Dispatchers.IO) {
         try {
-            // TODO: FFmpeg library removed - return 0
-            return@withContext 0L
-            /* DISABLED
             val command = "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"$videoPath\""
             val returnCode = FFmpeg.execute(command)
             
             if (returnCode == 0) {
                 val output = Config.getLastCommandOutput() ?: "0"
                 (output.trim().toDoubleOrNull() ?: 0.0).toLong() * 1000
-            */
             } else {
                 0L
             }

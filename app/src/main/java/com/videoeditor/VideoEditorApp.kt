@@ -5,21 +5,19 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import androidx.work.Configuration
-// TODO: YouTube-DL library removed (2025)
-// import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDL
 
 class VideoEditorApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
         
-        // TODO: YouTube-DL library removed - feature disabled
         // Initialize YouTube Downloader
-        // try {
-        //     YoutubeDL.getInstance().init(this)
-        // } catch (e: Exception) {
-        //     e.printStackTrace()
-        // }
+        try {
+            YoutubeDL.getInstance().init(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         
         // Create notification channel for schedules
         createNotificationChannel()
