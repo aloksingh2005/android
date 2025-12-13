@@ -102,10 +102,9 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.2.0")
     implementation("androidx.media3:media3-common:1.2.0")
 
-    // YouTube Downloader - DISABLED (unavailable on JitPack as of Dec 2025)
-    // TODO: Replace with alternative YouTube download solution
-    // implementation("com.github.yausername.youtubedl-android:library:0.14.+")
-    // implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.+")
+    // YouTube Downloader (yt-dlp wrapper - actively maintained)
+    implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
+    implementation("io.github.junkfood02.youtubedl-android:common:0.18.1")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

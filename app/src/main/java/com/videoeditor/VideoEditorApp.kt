@@ -5,22 +5,19 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import androidx.work.Configuration
-// import com.yausername.youtubedl_android.YoutubeDL  // DISABLED - library unavailable
+import com.yausername.youtubedl_android.YoutubeDL
 
 class VideoEditorApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
         
-        // Initialize YouTube Downloader - DISABLED (library unavailable)
-        // TODO: Replace with alternative YouTube download solution
-        /*
+        // Initialize YouTube Downloader
         try {
             YoutubeDL.getInstance().init(this)
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        */
         
         // Create notification channel for schedules
         createNotificationChannel()
